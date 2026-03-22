@@ -1,6 +1,5 @@
 streamlit
-prophet==1.1.5
+prophet
 pandas
 matplotlib
 reportlab
-pystan==2.19.1.1
