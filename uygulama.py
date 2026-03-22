@@ -27,22 +27,17 @@ def pdf_rapor_olustur(tahmin, model, urun_adi, siparis, siradaki, guvenlik, teda
 
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
-    import os
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    font_path = os.path.join(base_dir, 'Roboto-Regular.ttf')
-    if not os.path.exists(font_path):
-        font_path = '/System/Library/Fonts/Supplemental/Arial Unicode.ttf'
-    pdfmetrics.registerFont(TTFont('ArialUnicode', font_path))
+    pass  # built-in font kullanılıyor
 
     styles = getSampleStyleSheet()
     story = []
 
     # Başlık
-    baslik_style = ParagraphStyle('baslik', fontSize=20, fontName='ArialUnicode',
+    baslik_style = ParagraphStyle('baslik', fontSize=20, fontName='Helvetica',
         textColor=colors.HexColor('#0f1f3d'), spaceAfter=6, alignment=TA_CENTER)
-    alt_style = ParagraphStyle('alt', fontSize=11, fontName='ArialUnicode',
+    alt_style = ParagraphStyle('alt', fontSize=11, fontName='Helvetica',
         textColor=colors.HexColor('#64748b'), spaceAfter=20, alignment=TA_CENTER)
-    normal = ParagraphStyle('normal', fontSize=10, fontName='ArialUnicode',
+    normal = ParagraphStyle('normal', fontSize=10, fontName='Helvetica',
         textColor=colors.HexColor('#2d3748'), spaceAfter=6)
 
     story.append(Paragraph("Talep Tahmin Raporu", baslik_style))
@@ -63,8 +58,8 @@ def pdf_rapor_olustur(tahmin, model, urun_adi, siparis, siradaki, guvenlik, teda
     tablo.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#0f1f3d')),
         ('TEXTCOLOR', (0,0), (-1,0), colors.white),
-        ('FONTNAME', (0,0), (-1,0), 'ArialUnicode'),
-        ('FONTNAME', (0,1), (-1,-1), 'ArialUnicode'),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+        ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
         ('FONTSIZE', (0,0), (-1,-1), 10),
         ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.HexColor('#f8fafc'), colors.white]),
         ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#e2e8f0')),
@@ -76,7 +71,7 @@ def pdf_rapor_olustur(tahmin, model, urun_adi, siparis, siradaki, guvenlik, teda
 
     # Grafik
     story.append(Paragraph("Satış Tahmini Grafiği", ParagraphStyle('h2',
-        fontSize=13, fontName='ArialUnicode',
+        fontSize=13, fontName='Helvetica',
         textColor=colors.HexColor('#0f1f3d'), spaceAfter=8)))
 
     fig, ax = plt.subplots(figsize=(14, 4))
@@ -96,7 +91,7 @@ def pdf_rapor_olustur(tahmin, model, urun_adi, siparis, siradaki, guvenlik, teda
 
     # Mevsimsellik
     story.append(Paragraph("Mevsimsellik Analizi", ParagraphStyle('h2',
-        fontSize=13, fontName='ArialUnicode',
+        fontSize=13, fontName='Helvetica',
         textColor=colors.HexColor('#0f1f3d'), spaceAfter=8)))
 
     fig2 = model.plot_components(tahmin)
