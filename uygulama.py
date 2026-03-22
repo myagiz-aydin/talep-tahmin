@@ -9,6 +9,105 @@ matplotlib.rcParams['axes.spines.top'] = False
 matplotlib.rcParams['axes.spines.right'] = False
 import io
 
+def pdf_rapor_olustur(tahmin, model, urun_adi, siparis, siradaki, guvenlik, tedarik):
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import cm
+    from reportlab.lib import colors
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+    from reportlab.lib.enums import TA_CENTER, TA_LEFT
+    import io
+    import matplotlib.pyplot as plt
+    import datetime
+
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(buf, pagesize=A4,
+        rightMargin=2*cm, leftMargin=2*cm,
+        topMargin=2*cm, bottomMargin=2*cm)
+
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+    pdfmetrics.registerFont(TTFont('ArialUnicode', '/System/Library/Fonts/Supplemental/Arial Unicode.ttf'))
+
+    styles = getSampleStyleSheet()
+    story = []
+
+    # Başlık
+    baslik_style = ParagraphStyle('baslik', fontSize=20, fontName='ArialUnicode',
+        textColor=colors.HexColor('#0f1f3d'), spaceAfter=6, alignment=TA_CENTER)
+    alt_style = ParagraphStyle('alt', fontSize=11, fontName='ArialUnicode',
+        textColor=colors.HexColor('#64748b'), spaceAfter=20, alignment=TA_CENTER)
+    normal = ParagraphStyle('normal', fontSize=10, fontName='ArialUnicode',
+        textColor=colors.HexColor('#2d3748'), spaceAfter=6)
+
+    story.append(Paragraph("Talep Tahmin Raporu", baslik_style))
+    story.append(Paragraph(f"Kobi Start — {datetime.datetime.now().strftime('%d.%m.%Y %H:%M')}", alt_style))
+    story.append(Spacer(1, 0.3*cm))
+
+    # Özet tablo
+    tablo_data = [
+        ['Parametre', 'Değer'],
+        ['Ürün / Veri', str(urun_adi)],
+        [f'Tahmini Satış ({tedarik} gün)', f'{round(siradaki):,} adet'],
+        ['Önerilen Sipariş Miktarı', f'{siparis:,} adet'],
+        ['Güvenlik Stoğu', f'{guvenlik} adet'],
+        ['Tedarik Süresi', f'{tedarik} gün'],
+    ]
+
+    tablo = Table(tablo_data, colWidths=[8*cm, 8*cm])
+    tablo.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#0f1f3d')),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+        ('FONTNAME', (0,0), (-1,0), 'ArialUnicode'),
+        ('FONTNAME', (0,1), (-1,-1), 'ArialUnicode'),
+        ('FONTSIZE', (0,0), (-1,-1), 10),
+        ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.HexColor('#f8fafc'), colors.white]),
+        ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#e2e8f0')),
+        ('PADDING', (0,0), (-1,-1), 8),
+        ('ALIGN', (1,0), (1,-1), 'CENTER'),
+    ]))
+    story.append(tablo)
+    story.append(Spacer(1, 0.5*cm))
+
+    # Grafik
+    story.append(Paragraph("Satış Tahmini Grafiği", ParagraphStyle('h2',
+        fontSize=13, fontName='ArialUnicode',
+        textColor=colors.HexColor('#0f1f3d'), spaceAfter=8)))
+
+    fig, ax = plt.subplots(figsize=(14, 4))
+    model.plot(tahmin, ax=ax)
+    ax.set_title("")
+    ax.set_xlabel("Tarih")
+    ax.set_ylabel("Satış")
+    fig.tight_layout()
+
+    img_buf = io.BytesIO()
+    fig.savefig(img_buf, format='png', dpi=150, bbox_inches='tight')
+    img_buf.seek(0)
+    plt.close(fig)
+
+    story.append(Image(img_buf, width=16*cm, height=5*cm))
+    story.append(Spacer(1, 0.5*cm))
+
+    # Mevsimsellik
+    story.append(Paragraph("Mevsimsellik Analizi", ParagraphStyle('h2',
+        fontSize=13, fontName='ArialUnicode',
+        textColor=colors.HexColor('#0f1f3d'), spaceAfter=8)))
+
+    fig2 = model.plot_components(tahmin)
+    fig2.set_size_inches(14, 6)
+    img_buf2 = io.BytesIO()
+    fig2.savefig(img_buf2, format='png', dpi=150, bbox_inches='tight')
+    img_buf2.seek(0)
+    plt.close(fig2)
+
+    story.append(Image(img_buf2, width=16*cm, height=6*cm))
+
+    doc.build(story)
+    buf.seek(0)
+    return buf
+
+
 st.set_page_config(
     page_title="KOBİ Start — Talep Tahmin",
     page_icon="📦",
@@ -385,6 +484,8 @@ elif dosya and tahmin_btn:
             buf = io.BytesIO()
             fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
             st.download_button("⬇️ Grafiği indir", buf.getvalue(), "tahmin.png", "image/png")
+            pdf_buf = pdf_rapor_olustur(tahmin, model, "Genel", siparis, siradaki, guvenlik, tedarik)
+            st.download_button("📄 PDF Rapor İndir", pdf_buf.getvalue(), "tahmin_raporu.pdf", "application/pdf")
         with tab2:
             fig2 = model.plot_components(tahmin)
             fig2.set_size_inches(11, 6)
@@ -398,3 +499,4 @@ elif dosya and not tahmin_btn:
         <div class="empty-sub">Sol panelden kolonları ve parametreleri seçin,<br>ardından <b>Tahmin Et</b> butonuna basın.</div>
     </div>
     """, unsafe_allow_html=True)
+
