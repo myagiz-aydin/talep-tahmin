@@ -28,13 +28,11 @@ def pdf_rapor_olustur(tahmin, model, urun_adi, siparis, siradaki, guvenlik, teda
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
     import os
-    font_path = '/System/Library/Fonts/Supplemental/Arial Unicode.ttf'
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    font_path = os.path.join(base_dir, 'Roboto-Regular.ttf')
     if not os.path.exists(font_path):
-        font_path = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'
-    if os.path.exists(font_path):
-        pdfmetrics.registerFont(TTFont('ArialUnicode', font_path))
-    else:
-        pdfmetrics.registerFont(TTFont('ArialUnicode', font_path))
+        font_path = '/System/Library/Fonts/Supplemental/Arial Unicode.ttf'
+    pdfmetrics.registerFont(TTFont('ArialUnicode', font_path))
 
     styles = getSampleStyleSheet()
     story = []
